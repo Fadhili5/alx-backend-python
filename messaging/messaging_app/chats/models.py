@@ -47,7 +47,7 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
     
-class Conversation(models.UUIDField):
+class Conversation(models.Model):
     """
     Model to track conversations between users
     """
@@ -63,7 +63,7 @@ class Conversation(models.UUIDField):
         through='ConversationParticipant'
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         db_table = 'conversations'
