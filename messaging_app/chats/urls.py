@@ -8,5 +8,5 @@ router.register(r'messages', MessageViewSet, basename='messages')
 router.register(r'users', UserViewSet, basename='users')
 
 urlpatterns = [
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
 ]
