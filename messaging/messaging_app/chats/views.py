@@ -5,9 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from .models import User, Conversation, ConversationParticipant, Message
-from .serializer import (
+from .serializers import (
     UserSerializer, UserSummarySerializer,
-    ConversationSerializer, MessageCreateSerializer
+    ConversationSerializer, ConversationListSerializer,
+    MessageSerializer, MessageCreateSerializer
 )
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -24,7 +25,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         
     def perform_create(self, serializer):
         """Includes current user in conversation"""
-        participant_ids = request.data.get('participant_ids', [])
+        participant_ids = self.request.data.get('participant_ids', [])
         
         #Adds current user to participants
         current_user_id = str(self.request.user.user_id)
@@ -33,19 +34,19 @@ class ConversationViewSet(viewsets.ModelViewSet):
             
         serializer.save(participant_ids=participant_ids)
     
-@action(detail=True, methods=['get'])
-def messages(self, request, pk=None):
-    """Get conversation messages with pagination"""
-    conversation = self.get_object()
-    messages = conversation.messages.all().order_by('-sent_at')
-    
-    page = self.paginate_queryset(messages)
-    if page is not None:
-        serializer = MessageSerializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
-    
-    serialiser = MessageSerializer(messages, many=True)
-    return Response(serializer.data)
+    @action(detail=True, methods=['get'])
+    def messages(self, request, pk=None):
+        """Get conversation messages with pagination"""
+        conversation = self.get_object()
+        messages = conversation.messages.all().order_by('-sent_at')
+        
+        page = self.paginate_queryset(messages)
+        if page is not None:
+            serializer = MessageSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
 
 class MessageViewSet(viewsets.ModelViewSet):
     """ViewSet for managing messages"""
@@ -90,7 +91,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             return ownership_check
 
         message.is_edited = True
-        message.save(updated_fields=['is_edited', 'edited_at'])
+        message.save(update_fields=['is_edited', 'edited_at'])
         return super().update(request, *args, **kwargs)
     
     def destroy(self, request, *args, **kwargs):
@@ -109,7 +110,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         message.save(update_fields=['is_read'])
         return Response(MessageSerializer(message).data)
     
-    @action(detail=False. methods=['get'])
+    @action(detail=False, methods=['get'])
     def unread(self, request):
         unread_messages = self.get_queryset().filter(
             is_read=False
@@ -130,8 +131,8 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         
         if search:
             queryset = queryset.filter(
-                Q(email__icontains=search)
-                Q(first_name__icontains=search)
+                Q(email__icontains=search) |
+                Q(first_name__icontains=search) |
                 Q(last_name__icontains=search)
             )
         return queryset
