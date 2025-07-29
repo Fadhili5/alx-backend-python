@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -13,6 +13,7 @@ from .serializers import (
 
 class ConversationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
     
     def get_serializer_class(self):
         return ConversationListSerializer if self.action == 'list' else ConversationSerializer
@@ -51,6 +52,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     """ViewSet for managing messages"""
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
     
     def get_serializer_class(self):
         return MessageCreateSerializer if self.action == 'create' else MessageSerializer
@@ -124,6 +126,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSummarySerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'user_id'
+    filter_backends = [filters.SearchFilter]
     
     def get_queryset(self):
         queryset = super().get_queryset().exclude(user_id=self.request.user.user_id)
