@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#Scale deployment to 3 replicas
+kubectl scale deployment messaging-app-deployment --replicas=3
+
+#verify multiple pods are running
+kubectl get pods
+
+#Load test using wrk
+echo "Performing load test with wrk..."
+#Get ClusterIP (internal) (for testing you need to port-forward)
+kubectl port-forward service/messaging-app-service 8000:8000 &
+PORT_FORWARD_PID=$!
+sleep 2
+wrk -t2 -c10 -d10s http://127.0.0.1:8000/
+kill $PORT_FORWARD_PID
+
+#Monitor resource usage
+kubectl top pods
