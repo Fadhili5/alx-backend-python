@@ -2,6 +2,16 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from .models import User, Conversation, ConversationParticipant, Message
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['user_id'] = str(user.user_id)  # Ensure user_id is included
+        token['email'] = user.email
+        token['role'] = user.role
+        return token
 
 class UserSerializer(serializers.ModelSerializer):
     """
@@ -13,10 +23,11 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'user_id', 'first_name', 'last_name', 'email',
+            'id','user_id', 'first_name', 'last_name', 'email',
             'phone_number', 'role', 'created_at', 'password', 'confirm_password'
         ]
         extra_kwargs = {
+            'id': {'read_only': True},
             'user_id': {'read_only': True},
             'created_at': {'read_only': True},
         }
@@ -52,6 +63,7 @@ class MessageSerializer(serializers.ModelSerializer):
     """
     Serializer for message model
     """
+    sender_id = serializers.SerializerMethodField()
     class Meta:
         model = Message
         fields = [
@@ -63,13 +75,15 @@ class MessageSerializer(serializers.ModelSerializer):
             'sent_at': {'read_only': True},
             'edited_at': {'read_only': True},
         }
-        
-    def validate_sender_id(self, value):
-        try:
-            User.objects.get(user_id=value)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Invalid sender ID.")
-        return value
+
+    def get_sender_id(self, obj):
+        return obj.sender.user_id        
+    # def validate_sender_id(self, value):
+    #     try:
+    #         User.objects.get(user_id=value)
+    #     except User.DoesNotExist:
+    #         raise serializers.ValidationError("Invalid sender ID.")
+    #     return value
 
 class ConversationParticipantSerializer(serializers.ModelSerializer):
     participant = UserSummarySerializer(read_only=True)
