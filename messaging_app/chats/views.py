@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from .permissions import IsParticipantOfConversation
 from .models import User, Conversation, ConversationParticipant, Message
 from .serializers import (
     UserSerializer, UserSummarySerializer,
@@ -12,7 +13,7 @@ from .serializers import (
 )
 
 class ConversationViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
     filter_backends = [filters.SearchFilter]
     
     def get_serializer_class(self):
@@ -51,7 +52,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
 class MessageViewSet(viewsets.ModelViewSet):
     """ViewSet for managing messages"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
     filter_backends = [filters.SearchFilter]
     
     def get_serializer_class(self):
