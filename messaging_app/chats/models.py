@@ -40,7 +40,8 @@ class User(AbstractUser):
         primary_key=True,
         default=uuid.uuid4,
         editable=False,
-        db_index=True
+        db_index=True,
+        unique=True
     )
     first_name = models.CharField(max_length=150, null=False, blank=False)
     last_name = models.CharField(max_length=150, null=False, blank=False)
@@ -87,6 +88,10 @@ class User(AbstractUser):
         
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
+    
+    # @property
+    # def id(self):
+    #     return self.user_id
     
 class Conversation(models.Model):
     """
