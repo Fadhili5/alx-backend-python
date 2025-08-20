@@ -58,7 +58,10 @@ class MessageViewSet(viewsets.ModelViewSet):
         return MessageCreateSerializer if self.action == 'create' else MessageSerializer
     
     def get_queryset(self):
-        user_conversations = Conversation.objects.filter(participants=self.request.user)
+        if not self.request.user.is_authenticated:
+            return Message.objects.none() 
+        
+        user_conversations = Conversation.objects.filter(participants__id=self.request.user.id)
         return Message.objects.filter(
             conversation__in=user_conversations
         ).select_related('sender', 'conversation').order_by('-sent_at')
@@ -125,12 +128,16 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSummarySerializer
     permission_classes = [IsAuthenticated]
-    lookup_field = 'user_id'
+    # lookup_field = 'user_id'
     filter_backends = [filters.SearchFilter]
     
     def get_queryset(self):
-        queryset = super().get_queryset().exclude(user_id=self.request.user.user_id)
+        # if not self.request.user.is_authenticated:
+        #     return User.objects.none()      
+        
+        queryset = super().get_queryset().exclude(id=self.request.user.user_id)
         search = self.request.query_params.get('search')
+        search_fields = ['email', 'first_name', 'last_name']
         
         if search:
             queryset = queryset.filter(
