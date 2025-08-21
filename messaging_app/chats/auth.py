@@ -11,7 +11,7 @@ class CustomJWTAuthentication(JWTAuthentication):
             raise InvalidToken("Token contained no recognizable user identification")
 
         try:
-            user = User.objects.get(id=user_id)  # Explicitly use user_id
+            user = User.objects.get(user_id=user_id)  # Explicitly use user_id
             if not user.is_active:
                 raise AuthenticationFailed("User is inactive", code="user_inactive")
             return user
