@@ -4,7 +4,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
 from .permissions import IsParticipantOfConversation
+from .pagination import MessagePagination
+from .filters import MessageFilter
 from .models import User, Conversation, ConversationParticipant, Message
 from .serializers import (
     UserSerializer, UserSummarySerializer,
@@ -52,8 +55,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
 class MessageViewSet(viewsets.ModelViewSet):
     """ViewSet for managing messages"""
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsParticipantOfConversation]
-    filter_backends = [filters.SearchFilter]
+    pagination_class = MessagePagination
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    filterset_class = MessageFilter
     
     def get_serializer_class(self):
         return MessageCreateSerializer if self.action == 'create' else MessageSerializer
