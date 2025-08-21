@@ -69,7 +69,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_authenticated:
             return Message.objects.none() 
         
-        user_conversations = Conversation.objects.filter(participants__id=self.request.user.id)
+        user_conversations = Conversation.objects.filter(participants__user_id=self.request.user.user_id)
         return Message.objects.filter(
             conversation__in=user_conversations
         ).select_related('sender', 'conversation').order_by('-sent_at')
