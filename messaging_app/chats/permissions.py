@@ -2,16 +2,22 @@ from rest_framework import permissions
 
 class IsParticipantOfConversation(permissions.BasePermission):
     """
-    Allows access only to participants of conversation.
+    Allow only authenticated users who are participants of a conversation to access messages.
+    Restrict PUT, PATCH, DELETE to participants only.
     """
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
     
     def has_object_permission(self, request, view, obj):
-        user = request.user
         if hasattr(obj, 'participants'):
-            return user in obj.participants.all()
+            is_participant = request.user in obj.participants.all()
         elif hasattr(obj, 'conversation') and hasattr(obj.conversation, 'participants'):
-            return request.user in obj.conversation.participants.all()
-        return False
+            is_participant = request.user in obj.conversation.participants.all()
+        else:
+            is_participant = False
+    
+        if request.method in ["PUT","PATCH", "DELETE"]:
+            return is_participant
+        
+        return is_participant
         
