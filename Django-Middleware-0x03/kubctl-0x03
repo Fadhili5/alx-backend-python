@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Apply updated deployment (triggers rolling update)
+kubectl apply -f blue_deployment.yaml
+
+# Monitor update progress
+kubectl rollout status deployment/messaging-app-deployment
+
+#Test for downtime using curl(send requests every second for 30s)
+echo "Testing for downtime during rolling update..."
+for i in {1..30}; do
+    curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/ && sleep 1
+done
+
+#Verify rolling update is complete by checking pods
+kubectl get pods
