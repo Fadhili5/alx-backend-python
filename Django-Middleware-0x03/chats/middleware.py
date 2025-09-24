@@ -6,15 +6,24 @@ class RequestLoggingMiddleware:
         self.get_response = get_response
         
     def __call__(self, request):
-        user = request.user if request.user.is_authenticated else "Anonymous"
+        response = self.get_response(request)
+        user = getattr(request, 'user', None)
+        if user and hasattr(user, 'is_authenticated') and user.is_authenticated:
+            user_str = str(user)
+        else:
+            user_str = "Anonymous"
+        # user = request.user if request.user.is_authenticated else "Anonymous"
         log_entry = f"{datetime.now()} - User: {user} - Path: {request.path}\n"
         with open("C:\\Users\\HP\\Desktop\\alx-backend-python\\Django-Middleware-0x03\\requests.log", "a") as log_file:
             log_file.write(log_entry)
-        response = self.get_response(request)
         return response
     
 class RestrictAccessByTimeMiddleware:
-    def __init__(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
+    def __call__(self, request):
+        if request.path.startswith('/admin/') or request.path.startswith('/favicon.ico'):
+            return self.get_response(request)
         current_hour = datetime.now().hour
         if not(18 <= current_hour < 21):
             return HttpResponseForbidden("Access to messaging app is restricted outside 9pm and 6pm")
@@ -57,7 +66,9 @@ class RolepermissionMiddleware:
         self.get_response = get_response
     
     def __call__(self, request):
-        if request.user.is_authenticated:
+        if request.path.startswith('/admin/') or request.path.startswith('/favicon.ico'):
+            return self.get_response(request)
+        if getattr(request, 'user', None) and request.user.is_authenticated:
             user_role = getattr(request.user, 'role', None)
             if user_role not in ['admin', 'moderator']:
                 return HttpResponseForbidden("You do not have permission to perform this action.")
