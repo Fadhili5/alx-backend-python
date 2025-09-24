@@ -51,3 +51,14 @@ class OffensiveLanguageMiddleware:
         #Remove timestamps older than 1 minute
         if ip in self.message_log:
             self.message_log[ip] = [t for t in self.message_log[ip] if now - t < timedelta(minutes=1)]
+            
+class RolepermissionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            user_role = getattr(request.user, 'role', None)
+            if user_role not in ['admin', 'moderator']:
+                return HttpResponseForbidden("You do not have permission to perform this action.")
+        return self.get_response(request)
