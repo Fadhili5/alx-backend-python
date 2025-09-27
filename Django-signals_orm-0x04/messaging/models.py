@@ -56,6 +56,7 @@ class Notification(models.Model):
     message = models.ForeignKey(Message, related_name='notifications', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+    edited_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='edited_histories')
     
     def __str__(self):
         return f"Notification for {self.user} about message {self.message.id}"
