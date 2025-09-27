@@ -15,6 +15,7 @@ def delete_user(request):
     return JsonResponse({'message': 'User account and related data deleted successfully.'})
 
 @login_required
+@cache_page(60)
 def unread_inbox(request):
     unread_messages = Message.objects.filter(receiver=request.user, read=False).only('id', 'sender', 'content', 'timestamp').select_related('sender')
     data = [
