@@ -203,3 +203,10 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
