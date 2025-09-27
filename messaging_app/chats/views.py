@@ -2,6 +2,7 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.views.decorators.cache import cache_page
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
@@ -131,6 +132,10 @@ class MessageViewSet(viewsets.ModelViewSet):
         
         serializer = MessageSerializer(unread_messages, many=True)
         return Response(serializer.data)
+    
+    @cache_page(60)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
     
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
